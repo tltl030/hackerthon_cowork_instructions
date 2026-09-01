@@ -1,0 +1,28 @@
+:root {
+  font-family: Inter, "Noto Sans TC", "Segoe UI", system-ui, sans-serif;
+  color: #dbeafe;
+  background: #06111f;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --bg: #06111f;
+  --surface: #0a1929;
+  --text: #e6f4ff;
+  --muted: #8ea4b9;
+  --line: rgba(148, 163, 184, .18);
+  --line-strong: rgba(148, 163, 184, .34);
+  --cyan: #38d9f5;
+  --cyan-dim: rgba(56, 217, 245, .48);
+  --cyan-wash: rgba(56, 217, 245, .08);
+  --cyan-glow: rgba(56, 217, 245, .18);
+  --amber: #fbbf24;
+  --lime: #a3e635;
+  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(circle at 74% 5%, rgba(14, 165, 233, .1), transparent 28rem), linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px), var(--bg); background-size: auto, 48px 48px, 48px 48px, auto; }
+button, a { font: inherit; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+::selection { color: #02131a; background: var(--cyan); }

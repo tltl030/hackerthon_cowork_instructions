@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+
+# Production and tool output
+dist/
+dist-ssr/
+build/
+coverage/
+.cache/
+.parcel-cache/
+.vite/
+*.tsbuildinfo
+
+# Environment values (safe placeholder is allowed)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and operating systems
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local Codex / Agent state
+.codex/
+.agents/
+.agent/
+.openai/
+work/
+scratch/
+
+# Local package-manager cache
+.npm-cache/
