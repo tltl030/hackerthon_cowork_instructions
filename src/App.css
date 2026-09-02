@@ -163,27 +163,67 @@ footer { display: flex; justify-content: space-between; gap: 1rem; width: min(12
 .scenario-code { min-width: 0; }
 
 /* Git */
-.traffic-legend { display: flex; flex-wrap: wrap; gap: .4rem; }
-.traffic-legend span, .decision { padding: .4rem .55rem; border: 1px solid currentColor; font: 700 .65rem var(--mono); }
-.go, .decision.繼續 { color: var(--lime); }
-.care, .decision.小心 { color: var(--amber); }
-.halt, .decision.停止 { color: #fb7185; }
-.git-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-.git-item { border: 1px solid var(--line); background: var(--surface); }
-.git-item[open] { grid-column: 1 / -1; }
-.git-item summary { display: grid; grid-template-columns: minmax(0, 1fr) auto 1.5rem; gap: .8rem; align-items: center; min-height: 80px; padding: 1rem 1.2rem; cursor: pointer; list-style: none; }
-.git-term code, .git-term small { display: block; }
-.git-term code { width: fit-content; color: var(--cyan); font: 700 .9rem var(--mono); }
-.git-term small { margin-top: .2rem; color: var(--muted); font-size: .7rem; }
-.git-body { display: grid; gap: 1rem; padding: 1.3rem; border-top: 1px solid var(--line); }
-.git-explain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
-.git-explain h3 { margin: 0 0 .4rem; color: var(--text); font-size: .78rem; }
-.git-explain p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.6; }
-.error-decision { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; padding: .8rem; border-left: 2px solid currentColor; background: rgba(255,255,255,.025); font-size: .78rem; line-height: 1.55; }
-.error-decision span { color: var(--muted); }
-.naming-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-.naming-grid article { min-width: 0; padding: 1.2rem; border: 1px solid var(--line); background: var(--surface); }
-.naming-grid h3 { margin: 0 0 1rem; color: var(--text); }
+.git-guide-intro { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .55fr); gap: clamp(2rem, 6vw, 6rem); align-items: center; min-height: 580px; padding: 5rem 0 4rem; }
+.git-guide-intro h1 em { color: var(--cyan); }
+.git-three-rules { padding: 1.2rem; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(15, 34, 53, .94), rgba(8, 21, 35, .86)); }
+.git-three-rules > span { display: block; padding-bottom: .9rem; border-bottom: 1px solid var(--line); color: var(--amber); font: 700 .68rem var(--mono); letter-spacing: .1em; }
+.git-three-rules ol { margin: 0; padding: 0; list-style: none; }
+.git-three-rules li { display: grid; grid-template-columns: 5rem 1fr; align-items: center; min-height: 82px; border-bottom: 1px solid var(--line); }
+.git-three-rules li:last-child { border-bottom: 0; }
+.git-three-rules b { color: var(--cyan); font: 700 .9rem var(--mono); }
+.git-three-rules p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.git-jumpbar { position: sticky; top: 73px; z-index: 15; display: flex; align-items: center; gap: .5rem; padding: .75rem; overflow-x: auto; border: 1px solid var(--line); background: rgba(6, 17, 31, .94); backdrop-filter: blur(16px); }
+.git-jumpbar span { margin-right: .35rem; color: var(--muted); font: 700 .66rem var(--mono); white-space: nowrap; }
+.git-jumpbar a { padding: .5rem .7rem; border: 1px solid var(--line); color: var(--text); background: var(--surface); font-size: .75rem; white-space: nowrap; text-decoration: none; }
+.git-jumpbar a:hover, .git-jumpbar a:focus-visible { border-color: var(--cyan-dim); color: var(--cyan); }
+.git-path-section { padding-top: 5rem; }
+.git-path-section, .prompt-deck-section, .git-words-section, .git-stop-panel { scroll-margin-top: 145px; }
+.git-stage-list { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.git-stage { border: 1px solid var(--line); background: var(--surface); }
+.git-stage > header { display: grid; grid-template-columns: 4.5rem 1fr; gap: 1rem; padding: 1.35rem; border-bottom: 1px solid var(--line); }
+.git-stage > header > span { color: var(--line-strong); font: 700 1.65rem var(--mono); }
+.git-stage > header small { display: block; margin-bottom: .35rem; color: var(--amber); font: 700 .65rem var(--mono); letter-spacing: .08em; }
+.git-stage > header h3 { margin: 0 0 .35rem; color: var(--text); font-size: 1.15rem; }
+.git-stage > header p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.6; }
+.git-stage-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.git-stage-title em { padding: .3rem .45rem; border: 1px solid var(--cyan-dim); color: var(--cyan); font: 700 .62rem var(--mono); font-style: normal; white-space: nowrap; }
+.git-stage-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); }
+.git-stage-tools > section { min-width: 0; padding: 1rem; background: var(--surface); }
+.tool-label { margin: 0 0 .65rem; color: var(--cyan); font: 700 .65rem var(--mono); letter-spacing: .1em; }
+.stage-prompt .tool-label { color: var(--lime); }
+.git-stage-stop { display: grid; grid-template-columns: 8rem 1fr; gap: .8rem; padding: .9rem 1rem; border-top: 1px solid rgba(251, 191, 36, .18); background: rgba(251, 191, 36, .045); font-size: .78rem; line-height: 1.55; }
+.git-stage-stop b { color: var(--amber); }
+.git-stage-stop span { color: var(--muted); }
+.git-stop-panel { margin: 1rem 0 6rem; padding: clamp(1.4rem, 4vw, 2.5rem); border: 1px solid rgba(251, 113, 133, .45); background: linear-gradient(135deg, rgba(251, 113, 133, .08), rgba(8, 21, 35, .9)); }
+.git-stop-panel h2 { max-width: 850px; margin: 0 0 1rem; color: var(--text); font-size: clamp(1.6rem, 3.5vw, 2.7rem); letter-spacing: -.04em; }
+.git-stop-panel > p:not(.eyebrow) { max-width: 800px; margin: 0; color: var(--muted); line-height: 1.7; }
+.git-stop-panel code { color: var(--cyan); font-family: var(--mono); }
+.prompt-deck-section > .section-heading:not(:first-child) { margin-top: 5rem; }
+.role-prompt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: 1rem; }
+.role-prompt-card { min-width: 0; padding: 1.1rem; border: 1px solid var(--line); background: var(--surface); }
+.role-prompt-card > header { display: grid; grid-template-columns: 2.5rem 1fr; gap: .8rem; align-items: center; margin-bottom: 1rem; }
+.role-prompt-card > header > span { display: grid; width: 2.3rem; height: 2.3rem; place-items: center; border: 1px solid var(--cyan-dim); color: var(--cyan); background: var(--cyan-wash); font: 700 .7rem var(--mono); }
+.role-prompt-card small { display: block; margin-bottom: .18rem; color: var(--amber); font: 700 .62rem var(--mono); letter-spacing: .06em; }
+.role-prompt-card h3 { margin: 0; color: var(--text); font-size: .95rem; }
+.situation-prompt-list { display: grid; gap: .65rem; }
+.situation-prompt-list details { border: 1px solid var(--line); background: var(--surface); }
+.situation-prompt-list summary { display: grid; grid-template-columns: 6rem 1fr 1.5rem; gap: 1rem; align-items: center; min-height: 72px; padding: .9rem 1.1rem; cursor: pointer; list-style: none; }
+.situation-prompt-list summary::-webkit-details-marker { display: none; }
+.situation-prompt-list summary > span { color: var(--amber); font: 700 .65rem var(--mono); }
+.situation-prompt-list summary > strong { color: var(--text); font-size: .9rem; }
+.situation-prompt-list summary > b { color: var(--cyan); font-size: 1.2rem; font-weight: 400; transition: transform .2s; }
+.situation-prompt-list details[open] summary > b { transform: rotate(45deg); }
+.situation-prompt-list details > div { padding: 1rem; border-top: 1px solid var(--line); }
+.git-word-grid { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.git-word-grid > div { min-height: 130px; padding: 1rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.git-word-grid dt { color: var(--cyan); font: 700 .8rem var(--mono); }
+.git-word-grid dd { margin: 1.8rem 0 0; color: var(--muted); font-size: .78rem; line-height: 1.6; }
+.command-cheatsheet { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: 1rem; }
+.command-cheatsheet > div { min-width: 0; padding: 1rem; border: 1px solid var(--line); background: var(--surface); }
+.danger-word-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 1.5rem 0; background: rgba(251, 113, 133, .22); }
+.danger-word-grid > div { display: grid; grid-template-columns: 7rem 1fr; gap: .7rem; padding: .8rem; background: #0b1725; font-size: .75rem; line-height: 1.5; }
+.danger-word-grid b { color: #fb7185; font-family: var(--mono); }
+.danger-word-grid span { color: var(--muted); }
 
 /* Safety */
 .permission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
@@ -216,25 +256,31 @@ footer { display: flex; justify-content: space-between; gap: 1rem; width: min(12
 
 @media (max-width: 900px) {
   .page-intro { grid-template-columns: 1fr; min-height: auto; padding-top: 5rem; }
+  .git-guide-intro { grid-template-columns: 1fr; min-height: auto; padding-top: 5rem; }
   .role-columns, .scenario-grid, .permission-grid { grid-template-columns: 1fr; }
-  .git-explain { grid-template-columns: 1fr; }
+  .git-word-grid { grid-template-columns: 1fr 1fr; }
   .prompt-panel { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
-  .directory-grid, .git-grid, .naming-grid, .checklist, .checkpoint-list { grid-template-columns: 1fr; }
-  .git-item[open] { grid-column: auto; }
+  .directory-grid, .checklist, .checkpoint-list { grid-template-columns: 1fr; }
+  .git-jumpbar { top: 0; margin-inline: -1rem; border-inline: 0; }
+  .git-stage > header { grid-template-columns: 3rem 1fr; padding: 1rem; }
+  .git-stage-title { align-items: flex-start; flex-direction: column; }
+  .git-stage-tools { grid-template-columns: 1fr; }
+  .git-stage-stop { grid-template-columns: 1fr; }
+  .role-prompt-grid, .command-cheatsheet, .danger-word-grid, .git-word-grid { grid-template-columns: 1fr; }
+  .situation-prompt-list summary { grid-template-columns: 5rem 1fr 1rem; gap: .6rem; padding: .8rem; }
+  .danger-word-grid > div { grid-template-columns: 6.4rem 1fr; }
   .workflow-step { grid-template-columns: 3.3rem minmax(0, 1fr); }
   .workflow-index { padding: .9rem .7rem; font-size: 1rem; }
   .workflow-content { padding: 1rem; }
   .workflow-title { align-items: flex-start; flex-direction: column; }
-  .stop-line, .error-decision { grid-template-columns: 1fr; }
+  .stop-line { grid-template-columns: 1fr; }
   .principle-strip { justify-content: flex-start; overflow-x: auto; white-space: nowrap; }
   .role-manual summary { grid-template-columns: 2.5rem minmax(0, 1fr) 1rem; gap: .75rem; padding: .9rem; }
   .role-manual summary em { display: none; }
   .role-body { padding: 1rem; }
   .role-columns { gap: 1.5rem; }
-  .git-item summary { padding: .9rem; }
-  .decision { padding: .3rem .4rem; }
   .checklist li, .checkpoint-list li, .checklist li:nth-child(odd), .checkpoint-list li:nth-child(odd) { border-right: 0; border-bottom: 1px solid var(--line); }
   .checklist li:last-child, .checkpoint-list li:last-child { border-bottom: 0; }
   .freeze-banner { grid-template-columns: 1fr; }
