@@ -1,47 +1,170 @@
-import { CopyBlock, Notice, PageIntro, SectionTitle } from '../components/Content'
+import type { MouseEvent, ReactNode } from 'react'
+import { CopyBlock, Notice, SectionTitle } from '../components/Content'
 
-type GitItem = { term: string; zh: string; does: string; when: string; example: string; command: string; decision: '繼續' | '小心' | '停止'; error: string }
+type Stage = {
+  number: string
+  label: string
+  title: string
+  summary: string
+  owner: string
+  commands: string
+  prompt: string
+  stop: string
+}
 
-const gitItems: GitItem[] = [
-  { term: 'repository', zh: '專案倉庫', does: '保存程式碼、檔案與每一次 commit 歷史；本機與 GitHub 上各有一份。', when: '要開始一個受 Git 管理的專案，或確認目前連到哪個遠端。', example: '這個網站是一個 repository；實際比賽產品必須是另一個 repository。', command: `git rev-parse --show-toplevel\ngit remote -v`, decision: '停止', error: '若顯示的根目錄或 remote 不是預期專案，立刻停止，避免改錯 repository。' },
-  { term: 'clone', zh: '複製整個倉庫', does: '從 GitHub 下載 repository、history 與預設 branch，並建立 remote origin。', when: '第一次把遠端專案帶到自己的電腦；同一位置只需一次。', example: '比賽開始前，每位成員 clone 公開或團隊授權的 repository。', command: `git clone <repository-url>\nSet-Location <repository-folder>\ngit status`, decision: '停止', error: '目標資料夾已存在、URL 不對或無權限時不要改名硬做，先確認正確位置與 repository。' },
-  { term: 'status', zh: '查看現在狀態', does: '顯示所在 branch、已修改、staged、未追蹤與 conflict 檔案；不會改任何內容。', when: '每個 Git 動作前後都可以使用；不確定時第一個就跑它。', example: '準備換 branch 前，先確認沒有未完成修改。', command: `git status\ngit status --short --branch`, decision: '繼續', error: 'status 本身是安全的。看不懂輸出就保留畫面並詢問，不要用 reset 讓它「乾淨」。' },
-  { term: 'branch', zh: '獨立工作線', does: '讓一個小任務與 main 分開開發，完成後再用 PR 合併。', when: '從最新 main 開始任何功能、修正、文件或測試工作。', example: '新增 loading state 使用 feature/loading-state；修空資料用 fix/empty-response。', command: `git switch main\ngit pull --ff-only origin main\ngit switch -c feature/<short-name>`, decision: '停止', error: 'branch 已存在、main 不乾淨或起點不明時停止。不要覆蓋同名 branch。' },
-  { term: 'add', zh: '放入待提交區', does: '把指定檔案目前的變更放進 staging area，準備下一個 commit；不會上傳。', when: 'review 完 diff，確定哪些檔案屬於同一小任務之後。', example: '只把 LoadingState.tsx 與對應測試加入 staged。', command: `git add src/features/result/LoadingState.tsx\ngit diff --cached --stat\ngit diff --cached`, decision: '小心', error: '若 staged 出現不明檔案，使用 git restore --staged <file> 只取消 stage，再找 owner；不要直接刪檔。' },
-  { term: 'commit', zh: '建立本機存檔點', does: '把 staged 變更與訊息記錄成一個不可變的歷史節點。', when: '一個小任務完成、已測試且 staged diff 已 review。', example: 'feat: add loading state；fix: handle empty response；test: cover invalid input。', command: `git diff --cached\ngit commit -m "feat: add loading state"\ngit status`, decision: '小心', error: 'commit 失敗時先讀 hook／lint 訊息並修原因；不要用 --no-verify 跳過保護。' },
-  { term: 'push', zh: '上傳自己的 branch', does: '把本機 commit 發到 GitHub 的同名 branch，供 PR、CI 與隊友查看。', when: 'commit 完成並確認 branch 名稱正確後。', example: '第一次 push feature/loading-state 時建立 upstream。', command: `git branch --show-current\ngit push -u origin feature/loading-state`, decision: '停止', error: '遠端拒絕或已有不同 history 時停止。絕對不要改用 --force。' },
-  { term: 'pull', zh: '抓取並整合遠端更新', does: '通常等於 fetch 加上把遠端變更整合進目前 branch。使用 --ff-only 可避免意外產生 merge commit。', when: '更新乾淨的 main；確認沒有本機未提交修改。', example: '每輪開始與 merge 後同步 main。', command: `git status\ngit switch main\ngit pull --ff-only origin main`, decision: '停止', error: '顯示 divergent、conflict 或不是 fast-forward 就停。D 找 Integration Owner。' },
-  { term: 'fetch', zh: '只下載遠端資訊', does: '更新你對遠端 branch／commit 的認知，不修改目前工作檔案。', when: '想先看遠端發生什麼，還不想整合。', example: 'review 前更新 origin，再比較自己 branch 與 main。', command: `git fetch origin\ngit log --oneline --decorate --max-count=10 origin/main`, decision: '繼續', error: 'fetch 是安全唯讀更新；驗證失敗通常是網路或權限，處理前不要換 remote URL。' },
-  { term: 'Pull Request', zh: '請求審查與合併', does: '在 GitHub 呈現 branch 與 main 的差異、CI、討論與 approval；不是 Git 指令本身。', when: '小任務完成、push 後，邀請不同成員交叉 review。', example: 'B 開 loading state PR，A review UI 邏輯，Integration Owner 確認不影響 shared interface。', command: `gh pr create --base main --head feature/<short-name>\ngh pr diff\ngh pr checks`, decision: '小心', error: 'base／head 選錯、夾帶多任務或 checks 失敗時先修正，不要 merge。' },
-  { term: 'merge', zh: '合併工作線', does: '把已 review 的 branch 變更加入 main。團隊可用 squash 讓一個 PR 對應一個 commit。', when: 'PR 已 approval、CI 綠燈、無 conflict，且 Integration Owner 同意整合時機。', example: 'checkpoint 逐一合併小 PR，每合一個就驗證 main。', command: `gh pr checks\ngh pr merge --squash --delete-branch`, decision: '停止', error: '任何 check 紅燈或 conflict 都先停止；Agent 不得自行 merge。' },
-  { term: 'conflict', zh: '同一處無法自動判斷', does: '兩條工作線改到相同或相關內容，Git 無法決定哪一邊才對。它需要語意判斷。', when: 'pull、merge 或 rebase 時可能出現；不是靠猜測刪掉標記。', example: 'P1 與 P2 同時改 shared response type，必須由兩位 owner 與 Integration Owner 對齊。', command: `git status\ngit diff --name-only --diff-filter=U`, decision: '停止', error: '保留現場、不要 add／commit／reset。D 立即找 Integration Owner；原作者共同決定正確內容。' },
-  { term: 'stash', zh: '暫存未完成修改', does: '把工作樹修改暫時收起來，之後可還原；容易忘記或在還原時產生 conflict。', when: '只有在清楚知道要暫停什麼、Integration Owner 同意且先記錄內容時。', example: '緊急切換去驗證 main，但目前小任務尚未能 commit。', command: `git status\ngit stash push -u -m "WIP: <task>"\ngit stash list\n# 還原前先確認 branch\ngit stash pop`, decision: '停止', error: '新手不要自行 stash。pop conflict 或 stash 內容不明時停止，別 drop。' },
-  { term: 'restore', zh: '還原檔案或取消 stage', does: '可取消 staging，也可丟棄工作檔案變更；後者可能無法復原。', when: '最安全用法是只取消 stage；丟棄內容前必須確認那是自己不要的修改。', example: '不小心 add 了 README，只將它移出 staged。', command: `git restore --staged README.md\ngit status\n# 不要隨意執行：git restore <file>`, decision: '停止', error: '要使用不帶 --staged 的 restore 前先看 diff 並詢問；它會丟棄未 commit 內容。' },
-  { term: 'reset', zh: '移動歷史／重設狀態', does: '依參數可能取消 commit、改 staging，甚至刪掉未提交修改。--hard 風險最高。', when: 'Hackathon 新手流程不需要自行使用；交由 Integration Owner 在確認備份與影響後處理。', example: '發現 commit 放錯 branch 時，先停下說明，不要自行 reset。', command: `# 安全地先提供資訊，不執行 reset\ngit status\ngit log --oneline --decorate --max-count=8`, decision: '停止', error: 'D 看到 reset 建議必須停止。Agent 不得 reset 他人工作或用 --hard 清理狀態。' },
-  { term: 'force push', zh: '強制改寫遠端歷史', does: '讓遠端 branch 接受不相容 history，可能讓隊友 commit 消失或 PR 失真。', when: '本團隊 Hackathon 流程禁止讓 Agent 或新手使用；main 永遠禁止。', example: 'push 被拒絕不是改用 --force 的理由，而是 branch history 需要人類確認。', command: `# 禁止：git push --force\n# 禁止：git push -f\n# 改做：git status; git log; 找 Integration Owner`, decision: '停止', error: '看到 non-fast-forward 就保留訊息、停止操作。不要嘗試 --force-with-lease 來繞過規則。' },
+const stages: Stage[] = [
+  {
+    number: '00', label: '只做一次', title: '第一次把專案帶到電腦', owner: '全員',
+    summary: '已經有專案資料夾就跳過這張卡。clone 同一個 repository 只需要做一次。',
+    commands: `git clone <repository-url>\nSet-Location <repository-folder>\ngit status`,
+    prompt: `我是 Git 新手，要第一次取得團隊專案。\n請先確認我提供的 repository URL 與預計放置的資料夾，不要猜路徑。\n確認後，一次只給我一個 PowerShell 指令並解釋預期會看到什麼。\n完成 clone 後只執行 git status；如果資料夾已存在、權限失敗或 repository 不對，立刻停止。`,
+    stop: '資料夾已存在、要求登入、repository 名稱不對或沒有權限。',
+  },
+  {
+    number: '01', label: '每個任務開始前', title: '先回到最新的 main', owner: '全員',
+    summary: '確認手上沒有未完成修改，再取得隊友已合併的最新版本。',
+    commands: `git status\ngit switch main\ngit pull --ff-only origin main`,
+    prompt: `請先只做唯讀檢查，不要修改檔案。\n1. 讀取 AGENTS.md。\n2. 執行 git status，告訴我目前在哪個 branch、有沒有未提交修改。\n3. 判斷我現在是否適合更新 main。\n如果狀態不乾淨或你不確定，請停止並用繁體中文告訴我該找 Integration Owner 確認什麼。`,
+    stop: '看到 modified、untracked、divergent 或任何不明訊息，就先不要 pull。',
+  },
+  {
+    number: '02', label: '確認任務後', title: '替小任務開一條 branch', owner: '任務 Owner',
+    summary: '一個任務只用一條工作線；不要直接在 main 寫程式。',
+    commands: `git switch -c feature/<short-name>\n# 修正問題：git switch -c fix/<short-name>\n# 文件任務：git switch -c docs/<short-name>`,
+    prompt: `我的小任務是：「<用一句話描述任務>」。\n請根據任務建議一個簡短 branch 名稱，只能使用 feature/、fix/ 或 docs/ 開頭。\n先執行 git status 並確認目前從最新 main 出發。\n建立 branch 後回報 branch 名稱；不要自行 commit、push、rebase 或 reset。`,
+    stop: 'branch 已存在、名稱不確定、main 不乾淨或起點不明。',
+  },
+  {
+    number: '03', label: '開始寫功能', title: '把一個小任務交給 Codex', owner: '任務 Owner + AI',
+    summary: '先說清楚角色、檔案範圍、驗收與禁止事項；先看計畫再讓 AI 修改。',
+    commands: `git branch --show-current\ngit status --short --branch`,
+    prompt: `你是 <P1／P2／Integration & Support／Beginner & Slides> 的 coding agent。\n任務：「<一個小任務>」。\n只允許修改：<檔案或模組>。\n完成標準：<可以看見或測到的結果>。\n開始前先讀 AGENTS.md、README 與相關程式碼，回報最多 4 步的小計畫，不要立即修改。\n禁止：改 shared interface、dependency、設定、其他人的程式碼；禁止 rebase、reset、force push 或猜 conflict。\n如果範圍不足或狀態不明，停止並問我。`,
+    stop: 'AI 想跨模組重構、改 dependency、shared interface 或其他人的檔案。',
+  },
+  {
+    number: '04', label: 'AI 修改完成後', title: '看差異、執行檢查', owner: 'Human',
+    summary: '先看 AI 改了哪些檔案，再讓它找出專案真正使用的檢查指令。',
+    commands: `git status --short\ngit diff --stat\ngit diff\ngit diff --check`,
+    prompt: `請停止新增功能，現在只做檢查。\n1. 摘要 git diff：改了哪些檔案、每個變更對應哪個需求。\n2. 指出任何超出任務範圍、可疑資料、secret、dependency 或 shared interface 變更。\n3. 從 README 與 package scripts 找出本專案的 lint、typecheck、test、build 指令。\n4. 依序執行必要檢查；失敗時先解釋原因，不要擴大修改範圍。`,
+    stop: '看到不認識的檔案、secret、lockfile、設定或檢查失敗原因不明。',
+  },
+  {
+    number: '05', label: '檢查通過後', title: '只保存這個小任務', owner: 'Human',
+    summary: 'add 是選檔案，commit 是建立本機存檔點；兩者都還沒有上傳 GitHub。',
+    commands: `git add <本任務檔案>\ngit diff --cached\ngit commit -m "feat: <short summary>"\ngit status`,
+    prompt: `請幫我準備 commit，但先不要執行 commit。\n根據任務列出應該 stage 的檔案，不要使用 git add .。\n檢查 staged diff 是否只包含這個小任務，並建議一個 commit message：\nfeat: 新功能／fix: 修正／docs: 文件／test: 測試。\n如果 staged 內容超出範圍，停止並指出要取消 stage 的檔案。`,
+    stop: 'staged diff 有其他任務、不明檔案、secret 或你沒有親自看過的內容。',
+  },
+  {
+    number: '06', label: '準備交給隊友', title: 'push 並開小 PR', owner: 'Human + Reviewer',
+    summary: 'push 上傳自己的 branch；PR 請另一位成員檢查，確認後才合併。',
+    commands: `git branch --show-current\ngit push -u origin <branch-name>\ngh pr create --base main --head <branch-name>`,
+    prompt: `請根據目前 branch 與 commit 草擬一份小 PR，不要自行 merge。\n格式：\nSummary：這次完成什麼。\nChecks：實際執行哪些檢查、結果如何。\nRisk：reviewer 最需要注意什麼。\n確認 PR 只包含一個任務，並建議由哪個角色 review。若 CI 失敗或有 conflict，停止。`,
+    stop: 'push 被拒絕、CI 紅燈、PR 混入其他任務或出現 conflict。禁止 force push。',
+  },
+  {
+    number: '07', label: 'PR 合併後', title: '同步 main，再領下一張任務', owner: '全員',
+    summary: '任務完成後回到團隊版本。不要在舊 branch 直接開始下一個功能。',
+    commands: `git switch main\ngit pull --ff-only origin main\ngit status`,
+    prompt: `這個 PR 已由人類確認合併。請只協助我同步，不要修改程式碼。\n執行 git status，確認工作區乾淨後切回 main，使用 --ff-only 更新。\n最後回報目前 branch、是否與 origin/main 同步，以及我是否可以開始下一個小任務。\n若出現 conflict、divergent 或未提交內容，停止。`,
+    stop: '切不回 main、pull 失敗、狀態不乾淨或舊 branch 還有未保存內容。',
+  },
 ]
+
+const rolePrompts = [
+  { code: 'P1', role: 'Primary Developer 1', focus: '核心功能', prompt: `我是 P1，負責核心 Demo 路徑。\n請先找出完成「<核心小任務>」最短、可測試的切片。\n只修改 <檔案／模組>；先列出與 P2 共用的 interface，但未經同意不要改它。\n完成後回報可 Demo 的行為、測試結果與降級方案。` },
+  { code: 'P2', role: 'Primary Developer 2', focus: '平行功能線', prompt: `我是 P2，負責「<第二功能線>」。\n請先確認這個任務不會修改 P1 正在工作的檔案。\n依既定輸入／輸出完成一個獨立切片，包含相關 loading、empty 或 error 狀態。\n不要改 shared interface；若現有 contract 不夠，停止並列出需要協調的項目。` },
+  { code: 'IS', role: 'Integration & Support', focus: '整合與風險', prompt: `我是 Integration & Support。請先只做唯讀整合檢查。\n檢查目前 branch／PR 的範圍、shared interface、dependency、設定、secrets、測試與可能碰撞的檔案。\n輸出：可整合／需修改／必須停止，以及具體理由與最小修正清單。\n不要 merge、rebase、reset、force push 或自行解 conflict。` },
+  { code: 'D', role: 'Beginner & Slides', focus: '簡單任務與 Demo', prompt: `我是新手 D。請用繁體中文、短句，一次只帶我做一步。\n小任務：「<UI／測試／demo data／簡報任務>」。\n只允許修改 <1–2 個檔案>；完成標準是 <可直接看到的結果>。\n每次操作前先解釋目的。不要改 dependency、shared interface 或 Git history。\n看到 conflict、rebase、reset 或不明狀態，立刻叫我找 Integration Owner。` },
+]
+
+const situationPrompts = [
+  { title: '我不知道現在能不能繼續', tag: '先診斷', prompt: `請只執行 git status --short --branch、git log -5 --oneline --decorate 與 git diff --stat。\n用繁體中文告訴我：目前 branch、未提交檔案、與 main 的關係，以及「可以繼續」或「必須找 Integration Owner」。\n不要修改、stash、restore、reset、rebase 或 commit。` },
+  { title: '測試或 build 失敗', tag: '先縮小原因', prompt: `請讀取剛才的完整錯誤輸出，只診斷與本任務直接相關的第一個根因。\n說明：哪個檔案、為什麼失敗、最小修正是什麼、修完要重跑哪個指令。\n不要順手升級 dependency、關閉檢查或修改其他模組。先等我確認再修。` },
+  { title: '準備交給 reviewer', tag: 'PR 前', prompt: `請對目前變更做最後 review：檢查任務範圍、可讀性、錯誤狀態、測試、secrets、dependency、shared interface 與 Git diff。\n列出 Blocking／Should fix／Looks good。\n若沒有 blocking issue，再草擬 PR 的 Summary、Checks、Risk；不要自行 push 或 merge。` },
+  { title: 'checkpoint 要整合', tag: '每 90 分鐘', prompt: `現在是 90 分鐘 integration checkpoint。\n請彙整目前 branch 與 PR：owner、完成狀態、CI、shared interface 變更、dependency 變更與 conflict 風險。\n提出安全的 merge 順序，以及每次 merge 後要執行的最小驗證。\n只做分析，不要自行 merge 或解 conflict。` },
+  { title: '出現 conflict', tag: '立即停止', prompt: `出現 Git conflict。請不要修改任何 conflict 檔案。\n只執行 git status 與 git diff --name-only --diff-filter=U，列出衝突檔案與目前 branch。\n告訴我應該找哪些檔案 owner 與 Integration Owner。禁止 add、commit、restore、reset、rebase、merge 或 force push。` },
+]
+
+const terms = [
+  ['repository / repo', '整個專案、檔案與歷史紀錄的集合。'],
+  ['clone', '第一次把 GitHub 上的 repository 複製到電腦。'],
+  ['main', '團隊共同維護、目前應該可以運作的版本。'],
+  ['branch', '你為一個小任務建立的獨立工作線。'],
+  ['status', '查看目前 branch 與哪些檔案有變動；安全、不會改檔案。'],
+  ['pull', '把 GitHub 上最新版本更新到目前 branch。'],
+  ['diff', '查看程式碼到底改了什麼；commit 前一定要看。'],
+  ['add / stage', '挑出要放進下一個 commit 的檔案。'],
+  ['commit', '替 staged 內容建立一個有名稱的本機存檔點。'],
+  ['push', '把自己的 branch 與 commit 上傳到 GitHub。'],
+  ['Pull Request / PR', '請隊友 review，確認後把 branch 合併進 main。'],
+  ['merge', '把已 review 的工作加入 main；由團隊確認的人執行。'],
+]
+
+function JumpLink({ target, className, children }: { target: string; className?: string; children: ReactNode }) {
+  function jump(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault()
+    document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  return <a className={className} href="#/git" onClick={jump}>{children}</a>
+}
 
 export function GitPage() {
   return <>
-    <PageIntro kicker="GIT FOR BEGINNERS" title="Git 不是魔法，是有順序的存檔系統。" description="先看 status、只在自己的 branch 工作、review staged diff，再 commit 與 push。看不懂時，保留現場比亂下指令更有價值。" aside={<div className="traffic-legend"><span className="go">繼續</span><span className="care">小心</span><span className="halt">停止</span></div>} />
-    <Notice title="最安全的第一個指令"><code>git status</code> 只會讀取狀態，不會修改檔案。遇到不明狀況先跑它，貼完整輸出給 Integration Owner。</Notice>
-    <section className="section-block content-section">
-      <SectionTitle kicker="GLOSSARY + OPERATIONS" title="Git 功能逐項說明" description="每一項都有用途、使用時機、情境、PowerShell 範例，以及出錯時的決策。" />
-      <div className="git-grid">
-        {gitItems.map((item, index) => <details className="git-item" key={item.term} open={index === 0}>
-          <summary><span className="git-term"><code>{item.term}</code><small>{item.zh}</small></span><span className={`decision ${item.decision}`}>{item.decision}</span><b aria-hidden="true">＋</b></summary>
-          <div className="git-body">
-            <div className="git-explain"><section><h3>它做什麼</h3><p>{item.does}</p></section><section><h3>什麼時候用</h3><p>{item.when}</p></section><section><h3>範例情境</h3><p>{item.example}</p></section></div>
-            <CopyBlock value={item.command} label="複製 PowerShell" />
-            <div className={`error-decision ${item.decision}`}><b>出錯時：{item.decision}</b><span>{item.error}</span></div>
-          </div>
-        </details>)}
+    <header className="git-guide-intro">
+      <div>
+        <p className="eyebrow"><span />BEGINNER GIT PATH</p>
+        <h1>第一次用 Git？<br /><em>照著任務階段走就好。</em></h1>
+        <p className="lead">不用先背完整 Git。找到你現在正在做的事，複製指令，再把旁邊的 Prompt 交給 Codex。</p>
+        <div className="hero-actions"><JumpLink className="button primary" target="git-do-now">我準備開始任務</JumpLink><JumpLink className="button secondary" target="git-stop">我遇到錯誤了</JumpLink></div>
+      </div>
+      <aside className="git-three-rules">
+        <span>只記住 3 件事</span>
+        <ol><li><b>main</b><p>團隊目前可運作的版本</p></li><li><b>branch</b><p>你做一個小任務的工作區</p></li><li><b>PR</b><p>請隊友檢查並合併的申請</p></li></ol>
+      </aside>
+    </header>
+
+    <nav className="git-jumpbar" aria-label="Git 教學快速跳轉">
+      <span>我現在要⋯</span><JumpLink target="git-do-now">照流程操作</JumpLink><JumpLink target="git-prompts">叫 AI 幫忙</JumpLink><JumpLink target="git-words">查名詞</JumpLink><JumpLink target="git-stop">處理錯誤</JumpLink>
+    </nav>
+
+    <section className="section-block git-path-section" id="git-do-now">
+      <SectionTitle kicker="DO THIS NOW" title="跟著任務卡一步一步做" description="找到你目前的階段即可，不必一次讀完。每張卡都有指令、Prompt 與停止線。" />
+      <ol className="git-stage-list">
+        {stages.map((stage) => <li className="git-stage" key={stage.number}>
+          <header><span>{stage.number}</span><div><small>{stage.label}</small><div className="git-stage-title"><h3>{stage.title}</h3><em>{stage.owner}</em></div><p>{stage.summary}</p></div></header>
+          <div className="git-stage-tools"><section><p className="tool-label">POWERSHELL</p><CopyBlock value={stage.commands} label="複製指令" /></section><section className="stage-prompt"><p className="tool-label">ASK CODEX</p><CopyBlock value={stage.prompt} label="複製 Prompt" /></section></div>
+          <div className="git-stage-stop"><b>看到這些就停</b><span>{stage.stop}</span></div>
+        </li>)}
+      </ol>
+    </section>
+
+    <section className="section-block prompt-deck-section" id="git-prompts">
+      <SectionTitle kicker="PROMPT PLAYBOOK" title="先選角色，再把小任務填進去" description="四個角色的 Prompt 邊界不同。複製最接近你工作的那一張，不要把整個產品一次交給 AI。" />
+      <Notice title="Prompt 的三個必填欄位">把 <code>&lt;小任務&gt;</code>、<code>&lt;檔案範圍&gt;</code>、<code>&lt;完成標準&gt;</code> 寫清楚；不知道怎麼填就先問 Integration Owner。</Notice>
+      <div className="role-prompt-grid">
+        {rolePrompts.map((item) => <article className="role-prompt-card" key={item.code}><header><span>{item.code}</span><div><small>{item.focus}</small><h3>{item.role}</h3></div></header><CopyBlock value={item.prompt} label="複製角色 Prompt" /></article>)}
+      </div>
+
+      <SectionTitle kicker="WHEN SOMETHING HAPPENS" title="常見情境 Prompt" description="AI 可以幫你看狀態、縮小錯誤與準備 review；危險 Git 狀況只能蒐集資訊，不能讓它自行處理。" />
+      <div className="situation-prompt-list">
+        {situationPrompts.map((item, index) => <details key={item.title} open={index === 0}><summary><span>{item.tag}</span><strong>{item.title}</strong><b aria-hidden="true">＋</b></summary><div><CopyBlock value={item.prompt} label="複製情境 Prompt" /></div></details>)}
       </div>
     </section>
-    <section className="section-block commit-section">
-      <SectionTitle kicker="NAMING RULES" title="Branch 與 commit 的共同語言" description="名稱短、意圖單一，讓隊友不用打開 diff 就先知道這次變更是什麼。" />
-      <div className="naming-grid"><article><h3>Branch</h3><CopyBlock value={`feature/<short-name>\nfix/<short-name>\ndocs/<short-name>`} label="複製範例" /></article><article><h3>Commit</h3><CopyBlock value={`feat: add loading state\nfix: handle empty response\ndocs: clarify Git workflow\ntest: cover invalid input`} label="複製範例" /></article></div>
+
+    <section className="section-block git-words-section" id="git-words">
+      <SectionTitle kicker="30-SECOND GLOSSARY" title="看到名詞，30 秒查懂" description="只收錄這次黑客松流程真的會碰到的字。先知道它在流程中的位置，不必背底層原理。" />
+      <dl className="git-word-grid">{terms.map(([term, meaning]) => <div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>)}</dl>
+      <div className="command-cheatsheet">
+        <div><p className="tool-label">最安全的查看指令</p><CopyBlock value={`git status --short --branch\ngit diff --stat\ngit diff`} label="複製查看指令" /></div>
+        <div><p className="tool-label">四種 commit 開頭</p><CopyBlock value={`feat: add <feature>\nfix: handle <problem>\ndocs: clarify <topic>\ntest: cover <case>`} label="複製 commit 範例" /></div>
+      </div>
     </section>
-    <Notice tone="warning" title="D 的停止清單">conflict、rebase、reset、force push、detached HEAD、stash pop conflict 或任何不明 Git 狀態：停止並找 Integration Owner。</Notice>
+
+    <section className="git-stop-panel" id="git-stop">
+      <p className="eyebrow">STOP — ASK FOR HELP</p><h2>看到 conflict、rebase、reset、force push，就不要繼續。</h2><p>只執行 <code>git status</code>，保留完整畫面，找 Integration Owner。不要讓 AI 猜要刪掉哪一邊，也不要用危險指令讓狀態看起來「乾淨」。</p>
+      <div className="danger-word-grid"><div><b>conflict</b><span>兩邊改到同一處，需要原作者判斷</span></div><div><b>rebase</b><span>重新排列歷史，新手不自行操作</span></div><div><b>reset</b><span>可能丟失修改或移動歷史</span></div><div><b>force push</b><span>改寫遠端歷史，本團隊禁止</span></div></div>
+      <CopyBlock value={situationPrompts[4].prompt} label="複製停止求助 Prompt" />
+    </section>
   </>
 }

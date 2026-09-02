@@ -23,7 +23,7 @@ requireText('src/App.tsx', ['#/roles', '#/workflow', '#/git', '#/safety'])
 requireText('src/pages/HomePage.tsx', ['第一個 90 分鐘', '四人配置'])
 requireText('src/pages/RolesPage.tsx', ['Primary Developer 1', 'Beginner & Slides'])
 requireText('src/pages/WorkflowPage.tsx', ['認領任務', 'Merge 後同步'])
-requireText('src/pages/GitPage.tsx', ['force push', 'reset'])
+requireText('src/pages/GitPage.tsx', ['照著任務階段走就好', 'Primary Developer 1', 'integration checkpoint', 'force push'])
 requireText('src/pages/SafetyPage.tsx', ['Integration checkpoint', 'PR 前檢查'])
 
 const index = requireText('dist/index.html', [expectedBase])
