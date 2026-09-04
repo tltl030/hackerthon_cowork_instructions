@@ -144,6 +144,33 @@ footer { display: flex; justify-content: space-between; gap: 1rem; width: min(12
 .prompt-panel > div > p:not(.eyebrow) { color: var(--muted); font-size: .8rem; line-height: 1.6; }
 
 /* Workflow */
+.workflow-overview { margin-bottom: 1rem; padding: clamp(1.3rem, 3vw, 2.2rem); border: 1px solid var(--line); background: linear-gradient(145deg, rgba(15, 34, 53, .92), rgba(6, 17, 31, .96)); }
+.workflow-overview-heading { display: grid; grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr); gap: clamp(1.5rem, 5vw, 5rem); align-items: end; margin-bottom: 2rem; }
+.workflow-overview-heading h2 { max-width: 520px; margin: 0; color: var(--text); font-size: clamp(1.65rem, 3vw, 2.7rem); letter-spacing: -.04em; }
+.workflow-overview-heading > p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.75; }
+.context-map { display: grid; grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr) 2rem minmax(0, 1fr); align-items: stretch; }
+.context-card { min-width: 0; min-height: 255px; padding: 1.2rem; border: 1px solid var(--line); background: rgba(4, 16, 28, .76); }
+.context-card h3 { margin: 2.5rem 0 .65rem; color: var(--text); font-size: 1rem; }
+.context-card > p { margin: 0 0 1.2rem; color: var(--muted); font-size: .79rem; line-height: 1.62; }
+.context-index { color: var(--amber); font: 700 .64rem var(--mono); letter-spacing: .08em; }
+.context-arrow { display: grid; place-items: center; color: var(--cyan); font: 400 1.2rem var(--mono); }
+.context-files, .context-status { display: flex; flex-wrap: wrap; gap: .4rem; }
+.context-files code, .context-status span { padding: .35rem .45rem; border: 1px solid var(--cyan-dim); color: var(--cyan); background: var(--cyan-wash); font: 700 .64rem var(--mono); }
+.context-status span { border-color: rgba(163, 230, 53, .3); color: var(--lime); background: rgba(163, 230, 53, .055); }
+.branch-lines { display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: .45rem; align-items: center; color: var(--cyan); font: 700 .61rem var(--mono); }
+.branch-lines span { white-space: nowrap; }
+.branch-lines i { height: 1px; background: var(--cyan-dim); }
+.context-boundary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin-top: 1px; background: var(--line); }
+.context-boundary-grid article { padding: 1.2rem; background: rgba(7, 21, 36, .94); }
+.boundary-label { display: inline-flex; margin-bottom: 1rem; padding: .35rem .5rem; border: 1px solid var(--line); font: 700 .64rem var(--mono); letter-spacing: .06em; }
+.boundary-label.known { border-color: rgba(163, 230, 53, .35); color: var(--lime); }
+.boundary-label.tell { border-color: rgba(251, 191, 36, .35); color: var(--amber); }
+.natural-language-start { display: grid; grid-template-columns: minmax(190px, .35fr) minmax(0, 1fr); gap: 1.5rem; margin-top: 1px; padding: 1.3rem; border: 1px solid var(--cyan-dim); background: rgba(34, 211, 238, .035); }
+.natural-language-start h3 { margin: 0 0 .65rem; color: var(--text); font-size: 1.05rem; }
+.natural-language-start > div > p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.65; }
+.filename-note { margin: 1rem 0 0; padding: .8rem 1rem; border-left: 2px solid var(--amber); color: var(--muted); background: rgba(251, 191, 36, .045); font-size: .77rem; line-height: 1.6; }
+.filename-note b { color: var(--amber); }
+.filename-note code { color: var(--cyan); font-family: var(--mono); }
 .principle-strip { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1rem; border: 1px solid var(--line); color: var(--cyan); background: var(--surface); font: 700 .7rem var(--mono); letter-spacing: .08em; }
 .principle-strip b { color: var(--line-strong); }
 .workflow-list { display: grid; gap: .7rem; margin: 0; padding: 0; list-style: none; }
@@ -260,6 +287,11 @@ footer { display: flex; justify-content: space-between; gap: 1rem; width: min(12
   .role-columns, .scenario-grid, .permission-grid { grid-template-columns: 1fr; }
   .git-word-grid { grid-template-columns: 1fr 1fr; }
   .prompt-panel { grid-template-columns: 1fr; }
+  .workflow-overview-heading, .natural-language-start { grid-template-columns: 1fr; }
+  .context-map { grid-template-columns: 1fr; gap: .65rem; }
+  .context-arrow { transform: rotate(90deg); }
+  .context-card { min-height: auto; }
+  .context-card h3 { margin-top: 1.7rem; }
 }
 @media (max-width: 620px) {
   .directory-grid, .checklist, .checkpoint-list { grid-template-columns: 1fr; }
@@ -277,6 +309,10 @@ footer { display: flex; justify-content: space-between; gap: 1rem; width: min(12
   .workflow-title { align-items: flex-start; flex-direction: column; }
   .stop-line { grid-template-columns: 1fr; }
   .principle-strip { justify-content: flex-start; overflow-x: auto; white-space: nowrap; }
+  .workflow-overview { padding: 1rem; }
+  .context-boundary-grid { grid-template-columns: 1fr; }
+  .branch-lines { grid-template-columns: 1fr; }
+  .branch-lines i { width: 1px; height: .75rem; margin-left: .35rem; }
   .role-manual summary { grid-template-columns: 2.5rem minmax(0, 1fr) 1rem; gap: .75rem; padding: .9rem; }
   .role-manual summary em { display: none; }
   .role-body { padding: 1rem; }

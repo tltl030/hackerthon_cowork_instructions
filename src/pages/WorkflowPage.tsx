@@ -17,9 +17,46 @@ const steps = [
 
 const examplePrompt = `你正在 feature/loading-state branch。\n\n請先讀 AGENTS.md、package.json、src/features/result 與相關測試。\n目標：當結果 API 尚未完成時，結果區顯示既有設計語言的 loading state。\n允許修改：src/features/result 內的元件與其測試。\n禁止：修改 API contract、shared types、package.json、lockfile、路由與其他頁面。\n驗收：loading=true 時可見；loading=false 時既有結果不變；鍵盤與螢幕閱讀器可理解；lint、typecheck、相關測試通過。\n先提出最多 4 步計畫，不要立即修改。若現況與描述不一致，停止並列出問題。`;
 
+const quickStartPrompt = `我們正在既有的共同開發 repository 中，不要重新建立專案或猜測背景。
+
+請先：
+1. 確認目前所在的 repository 與資料夾。
+2. 讀取 AGENTS.md、README、相關程式碼、測試與專案指令。
+3. 執行 git status，回報目前 branch 與工作區是否乾淨。
+4. 你的角色是「<P1／P2／Integration & Support／Beginner & Slides>」。
+
+這次的小任務：「<用自然語言描述你想完成的事>」。
+允許修改：「<檔案或功能範圍>」。
+完成標準：「<可以看見或測到的結果>」。
+
+先用繁體中文摘要你已從 repository 讀到的既有規則、這個角色的責任與最小工作計畫；等我確認後再修改。
+若 Git 狀態、任務範圍或 shared interface 不清楚，停止並詢問，不要自行猜測。`;
+
 export function WorkflowPage() {
   return <>
-    <PageIntro kicker="DELIVERY LOOP" title="從任務卡到 main，十二個小步驟。" description="不直接在 main 開發。一個小任務對應一個 branch、一個清楚 commit、一個可以快速交叉 review 的小 PR。" aside={<><span className="status-chip lime">SMALL PR</span><span className="status-chip">CROSS REVIEW</span><span className="status-chip amber">90 MIN SYNC</span></>} />
+    <PageIntro kicker="DELIVERY LOOP" title="先確認共同上下文，再開始開發。" description="共同開發資料與規則已經在 repository 裡。先讓 AI 確認 Git 狀態與角色，再用自然語言描述這次的小任務。" aside={<><span className="status-chip lime">SHARED CONTEXT</span><span className="status-chip">NATURAL LANGUAGE</span><span className="status-chip amber">90 MIN SYNC</span></>} />
+    <section className="workflow-overview" aria-labelledby="workflow-overview-title">
+      <div className="workflow-overview-heading">
+        <div><p className="eyebrow">BEFORE YOU START</p><h2 id="workflow-overview-title">共同資料已經在資料夾裡</h2></div>
+        <p>AI 不需要每次都從零認識專案。讓它先讀取 repository 內的既有資料、確認 Git 與你的角色，接著只要用自然語言交代這次要完成的小任務。</p>
+      </div>
+      <div className="context-map" aria-label="從共同資料到 GitHub 協作的流程">
+        <article className="context-card folder-card"><span className="context-index">01 / FOLDER</span><h3>共同開發資料夾</h3><p>專案背景、規則與程式碼都已經在同一個 repository。</p><div className="context-files"><code>AGENTS.md</code><code>README.md</code><code>src/</code><code>tests/</code></div></article>
+        <span className="context-arrow" aria-hidden="true">→</span>
+        <article className="context-card agent-card"><span className="context-index">02 / AI CHECK</span><h3>先確認 Git 與角色</h3><p>AI 先讀既有資料，再回報目前 repository、branch、工作區狀態與角色邊界。</p><div className="context-status"><span>REPO ✓</span><span>GIT ✓</span><span>ROLE ✓</span></div></article>
+        <span className="context-arrow" aria-hidden="true">→</span>
+        <article className="context-card github-card"><span className="context-index">03 / GITHUB</span><h3>透過 GitHub 共同開發</h3><p>一個小任務一個 branch，完成後用小 PR 交叉 Review，再安全合併到 main。</p><div className="branch-lines"><span>your branch</span><i /><span>Pull Request</span><i /><span>main</span></div></article>
+      </div>
+      <div className="context-boundary-grid">
+        <article><span className="boundary-label known">不用重新貼給 AI</span><List items={['AGENTS.md 裡的協作與安全規則', 'README、專案指令、既有程式碼與測試', '已存在的 interface、命名與實作慣例']} /></article>
+        <article><span className="boundary-label tell">這次仍要告訴 AI</span><List items={['你這次扮演的角色', '一個明確的小任務', '允許修改的範圍', '可以看見或測到的完成標準']} /></article>
+      </div>
+      <div className="natural-language-start">
+        <div><p className="eyebrow">COPY & START</p><h3>開工 Prompt</h3><p>替換尖括號內容就能開始。AI 先讀 repository，再由你確認計畫；不用重複貼整份專案背景。</p></div>
+        <CopyBlock value={quickStartPrompt} label="複製開工 Prompt" />
+      </div>
+      <p className="filename-note"><b>檔名提醒：</b>這個 repository 使用的正式檔名是 <code>AGENTS.md</code>；請讓 AI 讀取實際存在的檔案，不要憑記憶猜測。</p>
+    </section>
     <div className="principle-strip"><span>BRANCH</span><b>→</b><span>CODE + TEST</span><b>→</b><span>DIFF REVIEW</span><b>→</b><span>SMALL PR</span><b>→</b><span>MAIN</span></div>
     <section className="section-block content-section">
       <SectionTitle kicker="STANDARD OPERATING PROCEDURE" title="標準協作流程" description="每一步都標示停止線。出錯時先保留現場，不要用破壞性指令把訊息消掉。" />
