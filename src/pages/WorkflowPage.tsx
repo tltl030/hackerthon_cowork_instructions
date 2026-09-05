@@ -1,43 +1,75 @@
-import { CopyBlock, List, Notice, PageIntro, SectionTitle } from '../components/Content'
+import { CopyBlock, Notice, PageIntro, SectionTitle } from '../components/Content'
 
-const steps = [
-  { title: '認領任務', owner: 'Human', why: '先把範圍、owner、驗收與碰撞檔案寫清楚。', command: `# 任務卡範例\nOwner: B\nTask: 結果頁 loading state\nFiles: src/features/result/*\nDone: loading 時顯示 skeleton；既有測試通過`, stop: '若兩人可能修改同一檔案，先由 Integration Owner 切界線。' },
-  { title: '更新 main', owner: 'Human', why: '從團隊最新、可運作的版本開始。先確認目前沒有未完成修改。', command: `git status\ngit switch main\ngit pull --ff-only origin main\ngit status`, stop: 'status 不乾淨或 pull 不是 fast-forward：停止，不要 stash 或 reset 來硬過。' },
-  { title: '建立 branch', owner: 'Human', why: '一個小任務一個 branch；branch 名稱說明工作類型與短名稱。', command: `git switch -c feature/loading-state\n# 其他例：fix/empty-response、docs/git-guide`, stop: '若 branch 已存在或起點不是 main，先確認 owner 與 commit 再繼續。' },
-  { title: '開始使用 Codex', owner: 'Human + Agent', why: '先給 Agent 目標、範圍、禁止事項與驗收；先讀再改。', command: `先讀 AGENTS.md 與 src/features/result。\n只完成 loading state，不改 API contract 或 dependency。\n先回報最小計畫；我確認後再實作。\n完成後執行相關測試並摘要 diff。`, stop: 'Agent 建議跨模組重構、改 dependency 或 shared interface：先停下請 Integration Owner 判斷。' },
-  { title: '修改與測試', owner: 'Human + Agent', why: '每次只完成一個可驗證切片；優先執行與變更最相關的檢查。', command: `npm run lint\nnpm run typecheck\nnpm run build`, stop: '檢查失敗要先讀錯誤。只修與本任務相關的原因；不要順手清理整個專案。' },
-  { title: 'Review diff', owner: 'Human', why: 'Agent 產出的程式碼仍由人類負責；確認範圍、意圖與公開安全。', command: `git status --short\ngit diff --stat\ngit diff\ngit diff --check`, stop: '看到不認識的檔案、secret、lockfile 或超出範圍的修改：不要 add，先查清楚。' },
-  { title: 'Commit', owner: 'Human', why: '只 stage 本任務檔案，讓 commit 保持單一目的。', command: `git add src/features/result/LoadingState.tsx\ngit diff --cached --stat\ngit diff --cached\ngit commit -m "feat: add loading state"`, stop: '不要使用 git add . 略過檢查。staged diff 不符合任務就先取消該檔 stage。' },
-  { title: 'Push', owner: 'Human', why: '把 branch 發到遠端，讓團隊與 CI 可以看到。', command: `git push -u origin feature/loading-state`, stop: '遠端拒絕或顯示 branch 已由別人使用：停止；不得 force push。' },
-  { title: 'Pull Request', owner: 'Human', why: '小 PR 提供變更目的、驗證證據、畫面與 reviewer 重點。', command: `gh pr create --base main --head feature/loading-state --title "feat: add loading state" --body "Summary: add result loading UI\nChecks: lint, typecheck, build\nRisk: visual only"`, stop: 'PR 夾帶其他任務或 diff 太大時，先拆小，不要請 reviewer 猜意圖。' },
-  { title: 'Review', owner: 'Teammate', why: '至少一位不同成員交叉 review；關鍵介面由 Integration Owner 加看。', command: `gh pr diff\ngh pr checks`, stop: 'CI 紅燈、interface 不明、缺測試或 conflict：回到作者修正，不要直接 merge。' },
-  { title: 'Merge', owner: 'Human', why: '確認 approval 與 checks 後 merge。偏好 squash，保留乾淨的任務歷史。', command: `gh pr merge --squash --delete-branch`, stop: '只能由團隊確認的 human 執行；Agent 不得自行 merge 或解 conflict。' },
-  { title: 'Merge 後同步', owner: 'Everyone', why: '每個人回到乾淨 main，再更新自己的後續 branch；checkpoint 驗證 main。', command: `git switch main\ngit pull --ff-only origin main\nnpm run typecheck\nnpm run build`, stop: '自己 branch 與新 main 衝突時，先找 Integration Owner；D 不自行 rebase。' },
+const stages = [
+  {
+    code: '01', phase: '開始前', time: '約 5–10 分鐘', title: '確認上下文，認領一個小任務',
+    summary: '共同資料已在 repository 裡。AI 先讀 AGENTS.md、README 與程式碼，再確認 Git、角色和任務範圍。',
+    jobs: ['確認所在 repository 與 git status', '從最新 main 建立自己的小 branch', '說明角色、任務、修改範圍與完成標準'],
+    commands: `git status\ngit switch main\ngit pull --ff-only origin main\ngit switch -c feature/<short-name>`,
+    prompt: `我的角色是「<角色>」，要認領「<一個小任務>」。\n請先讀 AGENTS.md、README 與相關程式碼，確認 repository、Git 狀態、任務範圍與可能碰撞的檔案。\n完成標準是「<可驗證結果>」。先回報最小計畫，等我確認後再修改。`,
+    success: '你位於自己的 branch；AI 能說清楚角色、範圍與完成標準。',
+    stop: '工作區不乾淨、pull 失敗、branch 已存在，或兩人可能修改同一檔案。',
+  },
+  {
+    code: '02', phase: '開發中', time: '每次一個小切片', title: '用自然語言開發，邊做邊驗證',
+    summary: '不必重新貼完整專案背景。只告訴 AI 這次要完成什麼，並要求它沿用 repository 既有規則與介面。',
+    jobs: ['一次只完成一個可驗證切片', '先確認 AI 的最小計畫', '修改後執行相關測試並 Review diff'],
+    commands: `git status --short\ngit diff --stat\nnpm run lint\nnpm run typecheck`,
+    prompt: `請讀取目前 branch、AGENTS.md、相關程式碼與測試。\n這次只完成：「<自然語言描述任務>」。\n允許修改：「<檔案或模組>」。\n禁止修改 dependency、shared interface 與任務外程式碼。\n先提出最多 4 步計畫；確認後實作、測試並摘要 diff。`,
+    success: '功能可見或可測，相關檢查通過，而且 diff 只包含目前任務。',
+    stop: 'AI 想跨模組重構、改 dependency／shared interface，或 diff 出現陌生檔案。',
+  },
+  {
+    code: '03', phase: '準備交付', time: '約 10–20 分鐘', title: '檢查、Commit、Push、開小 PR',
+    summary: '人類先確認 Agent 產出的內容，再只暫存本任務檔案。PR 要小到讓隊友能快速交叉 Review。',
+    jobs: ['跑完整檢查與 secrets scan', 'Review diff，只 stage 本任務檔案', 'commit、push 自己的 branch、建立 PR'],
+    commands: `npm run scan:secrets\nnpm run lint\nnpm run typecheck\nnpm run build\ngit diff --check\ngit add <本任務檔案>\ngit diff --cached`,
+    prompt: `功能已完成。請依 AGENTS.md 執行所有交付前檢查並摘要 diff。\n只暫存本任務檔案，建議一個清楚的 commit 訊息與小 PR 說明。\n等我確認後才能 commit 與 push；不要 merge、force push、reset 或猜測式解 conflict。`,
+    success: '檢查全綠；commit 單一目的；PR 說明包含目的、檢查結果與風險。',
+    stop: '檢查失敗、疑似 secret、lockfile 意外改變、PR 太大或出現 conflict。',
+  },
+  {
+    code: '04', phase: '合併之後', time: '每 90 分鐘', title: '交叉 Review、Merge 後同步 main',
+    summary: '由隊友 Review，由人類確認合併。所有人回到乾淨 main，驗證核心 Demo 流程，再開始下一輪。',
+    jobs: ['至少一位不同成員 Review', 'Integration Owner 檢查介面與碰撞點', 'Merge 後同步 main，確認建置與 Demo 主流程'],
+    commands: `git switch main\ngit pull --ff-only origin main\nnpm run typecheck\nnpm run build`,
+    prompt: `現在是 integration checkpoint。請盤點目前 PR、Git 狀態與 main 的檢查結果。\n列出已完成、待 Review、可能碰撞、介面風險、Demo 主流程狀態與下一輪建議。\n不要自行 merge 或解 conflict，先把需要人類決定的項目列出來。`,
+    success: 'main 可以運作；核心 Demo 流程通過；下一輪任務與 owner 清楚。',
+    stop: 'CI 紅燈、main 無法建置、shared interface 不一致，或任一 PR 有 conflict。',
+  },
 ]
-
-const examplePrompt = `你正在 feature/loading-state branch。\n\n請先讀 AGENTS.md、package.json、src/features/result 與相關測試。\n目標：當結果 API 尚未完成時，結果區顯示既有設計語言的 loading state。\n允許修改：src/features/result 內的元件與其測試。\n禁止：修改 API contract、shared types、package.json、lockfile、路由與其他頁面。\n驗收：loading=true 時可見；loading=false 時既有結果不變；鍵盤與螢幕閱讀器可理解；lint、typecheck、相關測試通過。\n先提出最多 4 步計畫，不要立即修改。若現況與描述不一致，停止並列出問題。`;
 
 export function WorkflowPage() {
   return <>
-    <PageIntro kicker="DELIVERY LOOP" title="從任務卡到 main，十二個小步驟。" description="不直接在 main 開發。一個小任務對應一個 branch、一個清楚 commit、一個可以快速交叉 review 的小 PR。" aside={<><span className="status-chip lime">SMALL PR</span><span className="status-chip">CROSS REVIEW</span><span className="status-chip amber">90 MIN SYNC</span></>} />
-    <div className="principle-strip"><span>BRANCH</span><b>→</b><span>CODE + TEST</span><b>→</b><span>DIFF REVIEW</span><b>→</b><span>SMALL PR</span><b>→</b><span>MAIN</span></div>
-    <section className="section-block content-section">
-      <SectionTitle kicker="STANDARD OPERATING PROCEDURE" title="標準協作流程" description="每一步都標示停止線。出錯時先保留現場，不要用破壞性指令把訊息消掉。" />
-      <ol className="workflow-list">
-        {steps.map((step, index) => <li key={step.title} className="workflow-step">
-          <div className="workflow-index">{String(index + 1).padStart(2, '0')}</div>
-          <div className="workflow-content"><div className="workflow-title"><h3>{step.title}</h3><span>{step.owner}</span></div><p>{step.why}</p><CopyBlock value={step.command} label="複製指令／範例" /><div className="stop-line"><b>STOP LINE</b><span>{step.stop}</span></div></div>
-        </li>)}
-      </ol>
+    <PageIntro kicker="FOUR-STAGE FLOW" title="一個任務，只走四個階段。" description="先看自己目前在哪一階段，再展開該階段的指令與 Prompt。完整 Git 名詞放在參考資料，不需要先背。" aside={<><span className="status-chip lime">SMALL TASK</span><span className="status-chip">SMALL PR</span><span className="status-chip amber">90 MIN SYNC</span></>} />
+
+    <nav className="stage-rail" aria-label="四階段流程">{stages.map((stage) => <button key={stage.code} type="button" onClick={() => document.getElementById(`stage-${stage.code}`)?.scrollIntoView({ behavior: 'smooth' })}><span>{stage.code}</span><strong>{stage.phase}</strong></button>)}</nav>
+
+    <section className="shared-context-summary">
+      <div><p className="eyebrow">開始前先知道</p><h2>不用重新教 AI 整個專案</h2></div>
+      <div className="context-summary-flow"><p><span>資料夾已經有</span><strong>AGENTS.md、README、程式碼、測試</strong></p><b aria-hidden="true">→</b><p><span>只要先確認</span><strong>Repository、Git、角色</strong></p><b aria-hidden="true">→</b><p><span>接著直接說</span><strong>這次的小任務與完成標準</strong></p></div>
     </section>
-    <section className="section-block scenario-section">
-      <SectionTitle kicker="FULL EXAMPLE" title="完整情境：新增 loading state" description="B 認領一個低耦合 UI 任務；Integration Owner 確認檔案範圍不與核心功能碰撞。" />
-      <div className="scenario-grid">
-        <article><span className="scenario-tag">TASK CARD</span><h3>結果頁 loading state</h3><List items={['Owner：B', 'Branch：feature/loading-state', '範圍：結果區元件與測試', '驗收：loading 與非 loading 都可用', 'Reviewer：A 或 Integration Owner']} /></article>
-        <article className="scenario-code"><span className="scenario-tag">POWERSHELL</span><CopyBlock value={`git switch main\ngit pull --ff-only origin main\ngit switch -c feature/loading-state\n# 使用 Codex 完成並檢查變更\nnpm run lint\nnpm run typecheck\nnpm run build\ngit diff --check\ngit add <本任務檔案>\ngit diff --cached\ngit commit -m "feat: add loading state"\ngit push -u origin feature/loading-state`} label="複製完整流程" /></article>
+
+    <section className="stage-section" aria-labelledby="stage-list-title">
+      <SectionTitle kicker="DO THIS NEXT" title="找到你的階段，照卡片做" description="每張卡只保留現在需要的資訊；指令與 Prompt 需要時再展開。" />
+      <div className="stage-list" id="stage-list-title">
+        {stages.map((stage, index) => <article className="stage-card" id={`stage-${stage.code}`} key={stage.code}>
+          <header><span>{stage.code}</span><div><small>{stage.phase} · {stage.time}</small><h2>{stage.title}</h2><p>{stage.summary}</p></div><em>{index === stages.length - 1 ? 'CHECKPOINT' : 'NEXT →'}</em></header>
+          <div className="stage-body">
+            <section><h3>現在只做這三件事</h3><ol>{stage.jobs.map((job, jobIndex) => <li key={job}><span>{jobIndex + 1}</span>{job}</li>)}</ol></section>
+            <section className="stage-signals"><div className="success-signal"><span>成功時</span><p>{stage.success}</p></div><div className="danger-signal"><span>停止線</span><p>{stage.stop}</p></div></section>
+          </div>
+          <details className="stage-detail"><summary><span>需要指令時展開</span><b>＋</b></summary><div><CopyBlock value={stage.commands} label="複製指令" /></div></details>
+          <details className="stage-detail prompt-detail"><summary><span>直接複製這階段的 Prompt</span><b>＋</b></summary><div><CopyBlock value={stage.prompt} label="複製 Prompt" /></div></details>
+        </article>)}
       </div>
-      <div className="prompt-panel wide"><div><p className="eyebrow">CODEX PROMPT</p><h3>範例任務 Prompt</h3><p>把目標、範圍、禁止事項與可驗收結果一次說清楚。</p></div><CopyBlock value={examplePrompt} label="複製 Prompt" /></div>
     </section>
-    <Notice tone="warning" title="Agent 的 Git 邊界">Agent 可以讀 status、diff、log，也可以在明確授權下 add／commit／push自己的 branch；不得自主 force push、reset 他人工作、改寫 history 或猜測式解 conflict。</Notice>
+
+    <section className="checkpoint-mini">
+      <div><p className="eyebrow">FIRST 90 MINUTES</p><h2>第一次整合前的節奏</h2></div>
+      <ol><li><time>00–15</time><strong>對齊目標</strong><span>確認題目、成功標準、不能做的事</span></li><li><time>15–35</time><strong>切分工作</strong><span>定義介面，認領不碰撞的小任務</span></li><li><time>35–70</time><strong>平行開發</strong><span>各自在 branch 完成可驗證切片</span></li><li><time>70–90</time><strong>第一次整合</strong><span>小 PR、交叉 Review、確認 main 可跑</span></li></ol>
+    </section>
+    <Notice tone="warning" title="Beginner & Slides 的固定停止線">遇到 conflict、rebase、reset、detached HEAD、拒絕 push 或不明 Git 狀態，保留現場並前往「遇到問題」，不要自行嘗試修復。</Notice>
+    <div className="workflow-footer-actions"><a className="button primary" href="#/prompts">前往 Prompt 工具箱</a><a className="button secondary" href="#/help">我遇到問題</a></div>
   </>
 }

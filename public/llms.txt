@@ -1,0 +1,21 @@
+# 一天 Hackathon 多人 AI Agent 協作指南
+
+> 給四人 Hackathon 團隊使用的公開協作指南。內容只包含通用角色、Git、Prompt 與安全規則，不包含比賽題目或產品機密。
+
+網站首頁：https://tltl030.github.io/hackerthon_cowork_instructions/
+AI 完整純文字版：https://tltl030.github.io/hackerthon_cowork_instructions/ai-guide.txt
+
+## 使用方式
+
+請優先讀取 ai-guide.txt。它整理了網站希望傳達的角色分工、四階段流程、自然語言開發方式、停止線與常用 Prompt。
+
+## 網站頁面
+
+- 開始工作：/#/
+- 四階段流程：/#/workflow
+- Prompt 工具箱：/#/prompts
+- 遇到問題：/#/help
+- 參考資料：/#/reference
+- 角色指南：/#/roles
+- Git 新手指南：/#/git
+- 安全與檢查：/#/safety
