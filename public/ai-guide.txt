@@ -1,0 +1,76 @@
+一天 Hackathon 多人 AI Agent 協作指南 — AI 可讀版本
+====================================================
+
+用途
+----
+這是一個公開的通用協作指南，供四人 Hackathon 團隊與協助他們的 AI 閱讀。
+這不是實際比賽產品，也不包含未公布題目、產品程式碼、私人架構、客戶資料、private URL、帳號或 secrets。
+
+網站希望傳達的核心概念
+----------------------
+團隊共同開發資料夾已經包含專案需要的上下文，例如 AGENTS.md、README、既有程式碼、測試與專案指令。
+成員不需要每次把所有背景重新貼給 AI。開始工作時，只要請 AI：
+
+1. 確認目前所在的 repository 與資料夾。
+2. 讀取 AGENTS.md、README、相關程式碼與測試。
+3. 執行 git status，回報目前 branch 與工作區狀態。
+4. 確認使用者的角色與這次的小任務。
+5. 先提出最小計畫，等人類確認後再修改。
+
+使用者這次仍需告訴 AI：自己的角色、一個明確的小任務、允許修改的範圍，以及可以看見或測到的完成標準。
+
+團隊角色
+--------
+P1 — Primary Developer 1：負責核心功能與最短可行路徑。
+P2 — Primary Developer 2：負責第二條功能線與技術風險。
+IS — Integration & Support：負責 shared interface、PR、整合、排障與 checkpoint。
+D — Beginner & Slides：負責低耦合簡單功能、UI、測試、Demo data 與簡報。
+
+D 遇到 conflict、rebase、reset、detached HEAD、拒絕 push 或不明 Git 狀態時，必須保留現場並找 Integration Owner，不自行處理。
+
+四階段工作流程
+--------------
+第一階段「開始前」：確認 repository、Git 狀態與角色；從最新 main 建立一個小任務的 branch。
+第二階段「開發中」：用自然語言描述一個小任務；AI 先讀 repository 再修改與測試；人類 Review diff。
+第三階段「準備交付」：執行 secrets、lint、typecheck、test、build 與 diff 檢查；只 stage 本任務檔案；commit、push 並建立小 PR。
+第四階段「合併之後」：由不同成員 Review；人類確認後 merge；全員同步 main，驗證 build 與 Demo 主流程。
+
+每 90 分鐘進行一次 integration checkpoint。預設結束前 2 小時 feature freeze，約保留 1.5 小時製作簡報與排練。
+
+Git 規則
+--------
+- 不直接在 main 開發。
+- 一個小任務對應一個 branch。
+- Branch 使用 feature/<short-name>、fix/<short-name> 或 docs/<short-name>。
+- Commit 可使用 feat:、fix:、docs: 或 test:。
+- 使用小 PR 並交叉 Review。
+- Agent 不得自主 force push、reset 他人工作、改寫 history、merge PR 或猜測式處理 conflict。
+
+通用開工 Prompt
+--------------
+我們正在既有的共同開發 repository 中。
+我的角色是「<P1／P2／Integration & Support／Beginner & Slides>」。
+這次的小任務是「<自然語言描述任務>」。
+允許修改「<檔案或模組>」，完成標準是「<可看見或測到的結果>」。
+
+請先讀取 AGENTS.md、README、相關程式碼、測試與專案指令，並執行 git status。
+先用繁體中文回報 repository、branch、工作區狀態、角色責任、停止線與最多四步的最小計畫。
+等我確認後再修改。若 Git 狀態、任務範圍或 shared interface 不清楚，停止並詢問，不要自行猜測。
+
+不明狀況 Prompt
+---------------
+我看不懂目前 Git 狀態。請保留現場，不要修改檔案，也不要執行 reset、restore、stash、rebase、merge、clean 或 force push。
+只執行唯讀檢查，接著用新手能懂的繁體中文說明：發生什麼事、我的工作是否還在、哪些操作有風險，以及應該把什麼資訊交給 Integration Owner。
+
+公開安全邊界
+------------
+- 不得放入 API key、token、password、private URL、真實帳號或客戶資料。
+- 不得放入未公布題目、產品程式碼、私人架構或 private repository 內容。
+- 真實環境值只能放在被忽略的 .env；.env.example 只能使用安全假值。
+- Dependency、shared interface、CI、部署與 conflict 都需要先詢問人類。
+- 懷疑 secret 已被提交時，停止推送、通知 owner 並撤銷或輪替；Agent 不自行改寫 history。
+
+如何協助閱讀網站的隊友
+--------------------
+先詢問他的角色與目前情境，再只提供下一個安全步驟。使用繁體中文與新手能懂的說法，不要求他先讀完整 Git 教學。
+每次回答都應包含：現在的目標、下一步、成功時會看到什麼、必須停止的情況，以及可直接使用的 Prompt 或 PowerShell 指令。

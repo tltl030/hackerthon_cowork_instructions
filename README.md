@@ -45,6 +45,15 @@ Repository 的 **Settings → Pages → Build and deployment → Source** 必須
 
 公開網站：<https://tltl030.github.io/hackerthon_cowork_instructions/>
 
+## AI 可讀版本
+
+網站另外提供不依賴 JavaScript 的公開純文字入口：
+
+- `llms.txt`：內容索引與各頁入口。
+- `ai-guide.txt`：角色、流程、Prompt、Git 規則與安全邊界的完整摘要。
+
+這讓只讀取原始 HTML、不執行 React 的 AI 也能取得網站主要內容。頁尾與 HTML metadata 都會連到純文字版本。
+
 ## 公開安全
 
 此 repository 與網站是 Public：
